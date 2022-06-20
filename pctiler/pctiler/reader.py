@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 
 import attr
 import morecantile
+from pccommon.logging import get_custom_dimensions
 import planetary_computer as pc
 from cogeo_mosaic.errors import NoAssetFoundError
 from fastapi import HTTPException
@@ -134,17 +135,17 @@ class PGSTACBackend(pgstac_mosaic.PGSTACBackend):
         bbox = self.tms.bounds(morecantile.Tile(x, y, z))
         assets = self.get_assets(Polygon.from_bounds(*bbox), **asset_kwargs)
 
-        te = time.perf_counter()
         logger.info(
             "Perf: Mosaic get assets for tile.",
-            extra={
-                "custom_dimensions": {
-                    "duration": f"{te - ts:0.4f}",
+            extra=get_custom_dimensions(
+                {
+                    "duration": f"{time.perf_counter() - ts:0.4f}",
                     "collection": collection,
                     "zxy": f"{z}/{x}/{y}",
                     "count": len(assets),
                 },
-            },
+                self.reader.request,
+            ),
         )
         return assets
 
